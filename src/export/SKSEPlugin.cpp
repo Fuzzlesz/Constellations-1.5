@@ -35,6 +35,38 @@ namespace
 		spdlog::set_default_logger(std::move(log));
 		spdlog::set_pattern("%s(%#): [%^%l%$] %v"s);
 	}
+
+	void SKSEMessageHandler(SKSE::MessagingInterface::Message* a_msg)
+	{
+		switch (a_msg->type) {
+		case SKSE::MessagingInterface::kDataLoaded:
+		{
+			RE::ScriptEventSourceHolder::GetSingleton()->AddEventSink(
+				&Data::ModObjectManager::Instance());
+
+			SKSE::GetMessagingInterface()->RegisterListener(
+				"CustomSkills",
+				[](auto msg)
+				{
+					CustomSkills::QueryCustomSkillsInterface(
+						msg,
+						PluginAPIStorage::get().customSkills);
+					const auto customSkills = PluginAPIStorage::get().customSkills;
+					if (!customSkills)
+						return;
+
+					if (const auto source =
+							customSkills->GetEventDispatcher<CustomSkills::SkillIncreaseEvent>()) {
+						source->AddEventSink(Hooks::Athletics::SkillIncreaseHandler::Instance());
+					}
+				});
+		} break;
+		case SKSE::MessagingInterface::kPostLoadGame:
+		{
+			Data::ModObjectManager::Instance().Reload();
+		} break;
+		}
+	}
 }
 
 extern "C" DLLEXPORT bool SKSEAPI
@@ -72,36 +104,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	Hooks::HandToHandPerks::WriteHooks();
 	Hooks::SorceryPerks::WriteHooks();
 
-	SKSE::GetMessagingInterface()->RegisterListener(
-		[](auto msg)
-		{
-			switch (msg->type) {
-			case SKSE::MessagingInterface::kDataLoaded:
-			{
-				RE::ScriptEventSourceHolder::GetSingleton()->AddEventSink(
-					&Data::ModObjectManager::Instance());
-			} break;
-			case SKSE::MessagingInterface::kPostLoadGame:
-			{
-				Data::ModObjectManager::Instance().Reload();
-			} break;
-			}
-		});
-
-	SKSE::GetMessagingInterface()->RegisterListener(
-		"CustomSkills",
-		[](auto msg)
-		{
-			CustomSkills::QueryCustomSkillsInterface(msg, PluginAPIStorage::get().customSkills);
-			const auto customSkills = PluginAPIStorage::get().customSkills;
-			if (!customSkills)
-				return;
-
-			if (const auto source =
-					customSkills->GetEventDispatcher<CustomSkills::SkillIncreaseEvent>()) {
-				source->AddEventSink(Hooks::Athletics::SkillIncreaseHandler::Instance());
-			}
-		});
+	SKSE::GetMessagingInterface()->RegisterListener(SKSEMessageHandler);
 
 	return true;
 }
