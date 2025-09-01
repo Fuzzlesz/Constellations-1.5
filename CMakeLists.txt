@@ -15,6 +15,7 @@ list(APPEND CMAKE_MODULE_PATH
 include(SKSEPlugin)
 
 set(SKSE_USE_XBYAK ON)
+set(SKSE_NO_INSTALL ON)
 
 SKSEPlugin_Add(
 	${PROJECT_NAME}
