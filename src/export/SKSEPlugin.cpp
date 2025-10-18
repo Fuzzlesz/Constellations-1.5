@@ -81,7 +81,7 @@ SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
 	}
 
 	const auto ver = a_skse->RuntimeVersion();
-	if (ver < SKSE::RUNTIME_1_5_39) {
+	if (ver < SKSE::RUNTIME_SSE_1_5_39) {
 		return false;
 	}
 

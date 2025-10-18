@@ -234,14 +234,14 @@ namespace Hooks
 			a_owner->GetActorValue(RE::ActorValue::kMagicka);
 
 		if (!usePerk || a_value <= magickaDeficit) {
-			a_owner->RestoreActorValue(
+			a_owner->ModActorValue(
 				RE::ACTOR_VALUE_MODIFIER::kDamage,
 				RE::ActorValue::kMagicka,
 				a_value);
 			return;
 		}
 
-		a_owner->RestoreActorValue(
+		a_owner->ModActorValue(
 			RE::ACTOR_VALUE_MODIFIER::kDamage,
 			RE::ActorValue::kMagicka,
 			magickaDeficit);
@@ -264,14 +264,14 @@ namespace Hooks
 		}
 
 		if (rightChargeDeficit > 0.0f) {
-			a_owner->RestoreActorValue(
+			a_owner->ModActorValue(
 				RE::ACTOR_VALUE_MODIFIER::kDamage,
 				RE::ActorValue::kRightItemCharge,
 				chargeValue * rightChargeDeficit / totalDeficit);
 		}
 
 		if (leftChargeDeficit > 0.0f) {
-			a_owner->RestoreActorValue(
+			a_owner->ModActorValue(
 				RE::ACTOR_VALUE_MODIFIER::kDamage,
 				RE::ActorValue::kLeftItemCharge,
 				chargeValue * leftChargeDeficit / totalDeficit);
@@ -401,7 +401,7 @@ namespace Hooks
 			return true;
 		}
 		else {
-			a_actor->RestoreActorValue(
+			a_actor->ModActorValue(
 				RE::ACTOR_VALUE_MODIFIER::kDamage,
 				RE::ActorValue::kAbsorbChance,
 				reflectPercent);
@@ -413,7 +413,7 @@ namespace Hooks
 	{
 		if (a_actor) {
 			const auto permanent = a_actor->GetPermanentActorValue(RE::ActorValue::kAbsorbChance);
-			a_actor->RestoreActorValue(
+			a_actor->ModActorValue(
 				RE::ACTOR_VALUE_MODIFIER::kDamage,
 				RE::ActorValue::kAbsorbChance,
 				permanent);
