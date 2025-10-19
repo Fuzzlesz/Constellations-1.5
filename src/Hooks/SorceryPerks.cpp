@@ -125,7 +125,7 @@ namespace Hooks
 
 				L(nullRef);
 				jmp(ptr[rip]);
-				dq(a_hookAddr + 0x23);
+				dq(a_hookAddr + 0x21);
 
 				L(funcLbl);
 				dq(std::bit_cast<std::uintptr_t>(&SorceryPerks::RestoreAbsorb));
@@ -212,7 +212,7 @@ namespace Hooks
 		int,
 		float a_value)
 	{
-		const auto actor = SKSE::stl::adjust_pointer<RE::Actor>(a_owner, -0xB8);
+		const auto actor = SKSE::stl::adjust_pointer<RE::Actor>(a_owner, -0xB0);
 		const auto perk = Data::ModObject<RE::BGSPerk>("StaffAbsorb"sv);
 		bool usePerk = perk && actor->HasPerk(perk);
 
