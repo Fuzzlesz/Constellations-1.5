@@ -234,17 +234,11 @@ namespace Hooks
 			a_owner->GetActorValue(RE::ActorValue::kMagicka);
 
 		if (!usePerk || a_value <= magickaDeficit) {
-			a_owner->ModActorValue(
-				RE::ACTOR_VALUE_MODIFIER::kDamage,
-				RE::ActorValue::kMagicka,
-				a_value);
+			a_owner->RestoreActorValue(RE::ActorValue::kMagicka, a_value);
 			return;
 		}
 
-		a_owner->ModActorValue(
-			RE::ACTOR_VALUE_MODIFIER::kDamage,
-			RE::ActorValue::kMagicka,
-			magickaDeficit);
+		a_owner->RestoreActorValue(RE::ActorValue::kMagicka, magickaDeficit);
 
 		const float chargeValue = a_value - magickaDeficit;
 
@@ -264,15 +258,13 @@ namespace Hooks
 		}
 
 		if (rightChargeDeficit > 0.0f) {
-			a_owner->ModActorValue(
-				RE::ACTOR_VALUE_MODIFIER::kDamage,
+			a_owner->RestoreActorValue(
 				RE::ActorValue::kRightItemCharge,
 				chargeValue * rightChargeDeficit / totalDeficit);
 		}
 
 		if (leftChargeDeficit > 0.0f) {
-			a_owner->ModActorValue(
-				RE::ACTOR_VALUE_MODIFIER::kDamage,
+			a_owner->RestoreActorValue(
 				RE::ActorValue::kLeftItemCharge,
 				chargeValue * leftChargeDeficit / totalDeficit);
 		}
@@ -349,18 +341,6 @@ namespace Hooks
 			const auto shooter = a_projectile->shooter.get();
 
 			if (shooter) {
-				RE::Projectile::LaunchData launchData;
-				launchData.origin = a_projectile->GetPosition();
-				launchData.projectileBase = baseForm;
-				launchData.shooter = a_actor;
-				launchData.combatController = a_actor->combatController;
-				launchData.desiredTarget = shooter.get();
-				launchData.parentCell = a_projectile->parentCell;
-				launchData.spell = spell;
-				launchData.castingSource = RE::MagicSystem::CastingSource::kInstant;
-				launchData.power = a_projectile->power;
-				launchData.scale = a_projectile->scale;
-
 				const auto angle = RE::CombatUtilities::GetAngleToProjectedTarget(
 					a_projectile->GetPosition(),
 					shooter.get(),
@@ -368,13 +348,22 @@ namespace Hooks
 					baseForm->data.gravity,
 					RE::ACTOR_LOS_LOCATION::kTorso);
 
-				launchData.angleZ = angle.z;
-				launchData.angleX = angle.x;
-				launchData.autoAim = false;  // fire at the specified angle
-				launchData.useOrigin = true;
-				launchData.forceConeOfFire = true;
+				RE::Projectile::ProjectileRot angles;
+				angles.z = angle.z;
+				angles.x = angle.x;
 
-				RE::Projectile::LaunchData();
+				RE::Projectile::LaunchData
+					launchData(baseForm, a_actor, a_projectile->GetPosition(), angles);
+
+				launchData.desiredTarget = shooter.get();
+				launchData.spell = spell;
+				launchData.castingSource = RE::MagicSystem::CastingSource::kInstant;
+				launchData.power = a_projectile->power;
+				launchData.scale = a_projectile->scale;
+				launchData.parentCell = a_projectile->parentCell;
+
+				RE::ProjectileHandle handle;
+				RE::Projectile::Launch(&handle, launchData);
 			}
 
 			if (spell->GetCastingType() != RE::MagicSystem::CastingType::kConcentration &&
@@ -401,10 +390,7 @@ namespace Hooks
 			return true;
 		}
 		else {
-			a_actor->ModActorValue(
-				RE::ACTOR_VALUE_MODIFIER::kDamage,
-				RE::ActorValue::kAbsorbChance,
-				reflectPercent);
+			a_actor->DamageActorValue(RE::ActorValue::kAbsorbChance, reflectPercent);
 			return false;
 		}
 	}
@@ -413,10 +399,7 @@ namespace Hooks
 	{
 		if (a_actor) {
 			const auto permanent = a_actor->GetPermanentActorValue(RE::ActorValue::kAbsorbChance);
-			a_actor->ModActorValue(
-				RE::ACTOR_VALUE_MODIFIER::kDamage,
-				RE::ActorValue::kAbsorbChance,
-				permanent);
+			a_actor->RestoreActorValue(RE::ActorValue::kAbsorbChance, permanent);
 		}
 	}
 }
