@@ -341,6 +341,18 @@ namespace Hooks
 			const auto shooter = a_projectile->shooter.get();
 
 			if (shooter) {
+				RE::Projectile::LaunchData launchData{};
+				launchData.origin = a_projectile->GetPosition();
+				launchData.projectileBase = baseForm;
+				launchData.shooter = a_actor;
+				launchData.combatController = a_actor->combatController;
+				launchData.desiredTarget = shooter.get();
+				launchData.parentCell = a_projectile->parentCell;
+				launchData.spell = spell;
+				launchData.castingSource = RE::MagicSystem::CastingSource::kInstant;
+				launchData.power = a_projectile->power;
+				launchData.scale = a_projectile->scale;
+
 				const auto angle = RE::CombatUtilities::GetAngleToProjectedTarget(
 					a_projectile->GetPosition(),
 					shooter.get(),
@@ -348,19 +360,11 @@ namespace Hooks
 					baseForm->data.gravity,
 					RE::ACTOR_LOS_LOCATION::kTorso);
 
-				RE::Projectile::ProjectileRot angles;
-				angles.z = angle.z;
-				angles.x = angle.x;
-
-				RE::Projectile::LaunchData
-					launchData(baseForm, a_actor, a_projectile->GetPosition(), angles);
-
-				launchData.desiredTarget = shooter.get();
-				launchData.spell = spell;
-				launchData.castingSource = RE::MagicSystem::CastingSource::kInstant;
-				launchData.power = a_projectile->power;
-				launchData.scale = a_projectile->scale;
-				launchData.parentCell = a_projectile->parentCell;
+				launchData.angleZ = angle.z;
+				launchData.angleX = angle.x;
+				launchData.autoAim = false;
+				launchData.useOrigin = true;
+				launchData.forceConeOfFire = true;
 
 				RE::ProjectileHandle handle;
 				RE::Projectile::Launch(&handle, launchData);
@@ -390,7 +394,9 @@ namespace Hooks
 			return true;
 		}
 		else {
-			a_actor->DamageActorValue(RE::ActorValue::kAbsorbChance, reflectPercent);
+			a_actor->RestoreActorValue(
+				RE::ActorValue::kAbsorbChance,
+				reflectPercent);
 			return false;
 		}
 	}
