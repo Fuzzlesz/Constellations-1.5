@@ -34,19 +34,18 @@ namespace Hooks
 
 	void HandToHand::ProcessHandToHandXP(const RE::HitData& a_hitData)
 	{
-		_ProcessHandToHandXP(a_hitData);
-
 		const auto aggressor = a_hitData.aggressor.get();
-		if (!aggressor || !aggressor->GetIsPlayerOwner())
-			return;
 
-		if (!a_hitData.weapon || !a_hitData.weapon->IsHandToHandMelee())
-			return;
-
-		const float skillUse = aggressor->GetActorValue(RE::ActorValue::kUnarmedDamage);
-		if (const auto customSkills = util::GetCustomSkillsInterface()) {
-			customSkills->AdvanceSkill("HandToHand", skillUse);
+		if (aggressor && aggressor->GetIsPlayerOwner()) {
+			if (a_hitData.weapon && a_hitData.weapon->IsHandToHandMelee()) {
+				const float skillUse = aggressor->GetActorValue(RE::ActorValue::kUnarmedDamage);
+				if (const auto customSkills = util::GetCustomSkillsInterface()) {
+					customSkills->AdvanceSkill("HandToHand", skillUse);
+				}
+			}
 		}
+
+		_ProcessHandToHandXP(a_hitData);
 	}
 
 	void HandToHand::GetUnarmedDamage(const RE::ActorValueOwner* a_avOwner, float& a_damage)
